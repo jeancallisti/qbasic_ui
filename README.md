@@ -18,15 +18,28 @@ Please note that this uses graphical mode **SCREEN 12** (640x480 pixels , 16 col
 # How to run
 
 - Get DosBox.
-- Mount the directory structure at the root of C:\
-     C:\SRC
-     C:\BC7
-     Note: BC7 is the latest version of QBasic that was released back in the days. I think?
+- At the end of your DosBox config file (in the [autoexec] section), add this so that QBX.EXE can be run from any folder :
+     `SET PATH=C:\bc7\bin;`
+- Still in DosBox, use the classic `mount` command to mount the  repo's directory structure at the root of Dosbox's C:\
+  For example if the project is in _C:\MyRepos\ThisProject_ on your computer, type this in DosBox :
+  
+  `mount c "C:\MyRepos\ThisProject"`
+
+  Now if you run DosBox you see this in DOS:
+     `C:\SRC`
+     `C:\BC7`
+  
+     Note: **BC7** is the latest version of QBasic that was released back in the days. I think?
            It lets you compile to .EXE and even to binary libraries (.QLB)
 
      Note: Other folders are not really used, they remain from trial and error to make everything work.
+
+- Go to C:\SRC
+    `cd C:\SRC`
   
-- Run QBX.bat in C:\SRC. That batch file does 2 things :
+- Run `QBX.bat`.
+
+  That batch file does 2 things :
     1. opens QBASIC in "high resolution" (/H switch), for comfort
     2. makes sure that library QBX.QLB gets loaded in memory (/L switch). It's supposed to be loaded by default anyways but you never know
  
