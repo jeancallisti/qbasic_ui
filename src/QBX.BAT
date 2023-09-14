@@ -1,0 +1,2 @@
+QBX.EXE /H /L C:\BC7\LIB\QBX.QLB
+

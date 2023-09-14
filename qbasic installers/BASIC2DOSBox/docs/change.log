@@ -1,0 +1,30 @@
+
+BASIC 2 DOSBox v1.2.0 - new features and bug fixes (2021-03-17):
+
+Added: Optional inbuilt DOSBox Installation
+
+Fixed: Whitespace issue in Folder Paths
+Fixed: Possible issue with slashes while unzipping
+
+========================================================================
+
+BASIC 2 DOSBox v1.1.0 - new features and changes (2016-03-15):
+
+Added: QBasic 1.1 Installation
+Added: Various QBasic Demo Files (optional)
+Added: Additional entry in each config file: directory named _floppy will always be mounted as Floppy Drive A.
+
+Changed: QuickBasic 4.5 [complete] including all Example Files and Demos
+
+========================================================================
+
+BASIC 2 DOSBox v1.0.0 - first release (2015-09-06)
+
+========================================================================
+
+"BASIC 2 DOSBox" should run with all modern Windows OS's (both x86 and x64), such as: Windows XP, Vista, 7, 8, 8.1 and 10
+
+Tested with these OS's:
+Windows XP Professional Service Pack 3 (x86)
+Windows 7 Ultimate Service Pack 1 (x86)
+Windows 10 Pro Version 2004 (x64)
