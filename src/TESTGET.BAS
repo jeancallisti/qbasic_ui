@@ -59,7 +59,7 @@ FOR inputColor% = 0 TO 15
     CALL gfxRectFill(100 + inputColor% * 20, 30 + 20, 100 + inputColor% * 20 + 19, 30 + 20 + 19, inputColor%)
 NEXT
 
-SLEEP
+'SLEEP
 
 '=================
 
@@ -68,8 +68,9 @@ bufferSize% = 16 \ 16 + 100
 DIM buffer(1000) AS INTEGER
 
 GET (0, 0)-(15, 0), buffer(0)
-PRINT "w=", buffer(0), ", h="; buffer(1)
-SLEEP
+'PRINT "w=", buffer(0), ", h="; buffer(1)
+'SLEEP
+
 
 
 
@@ -87,6 +88,56 @@ FOR outputColor% = 0 TO 15
 
 NEXT
 
+
+'===================================
+
+CLS
+
+
+
+
+u% = 100
+v% = 100
+
+FOR i% = 0 TO 29
+      FOR j% = 0 TO 9
+	  colr% = RND * 15
+	  CALL gfxRectFill(u% + i% * 5, v% + j% * 5, u% + i% * 5 + 4, v% + j% * 5 + 4, colr%)
+      NEXT
+
+
+NEXT
+
+xTopLeft% = u%
+yTopLeft% = v%
+xBottomRight% = u% + 30 * 5
+yBottomRight% = v% + 10 * 5
+
+DIM buffer2(10000) AS INTEGER
+GET (xTopLeft%, yTopLeft%)-(xBottomRight%, yBottomRight%), buffer2
+
+pixelsCount% = 30 * 5 * 10 * 5
+wordsCount% = pixelsCount \ 16 + 1 * 4
+
+x% = 0
+y% = 0
+
+spriteWidth% = buffer2(0)
+spriteHeight% = buffer2(1)
+
+FOR word% = 0 TO wordsCount% - 1
+    CALL Decode4Words(buffer2(), 2, result())
+    FOR pixel% = 0 TO 15
+	colr% = result(pixel%)
+	PSET (u% + x%, v% + 100 + y%), colr%
+	x% = x% + 1
+	IF (x% > spriteWidth%) THEN
+	  x% = 0
+	  y% = y% + 1
+	END IF
+
+    NEXT
+NEXT
 
 
 SLEEP
@@ -110,9 +161,9 @@ SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEG
 
 
 
-   PRINT "words = "; w0%; ","; w1%; ","; w2%; ","; w3%
+   'PRINT "words = "; w0%; ","; w1%; ","; w2%; ","; w3%
 
-   SLEEP
+   'SLEEP
 
 
    'we get the highest order bit first before we blast it
@@ -144,7 +195,7 @@ SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEG
 	result(position%) = b3% * 8 + b2% * 4 + b1% * 2 + b0%
 
 
-	PRINT b0%; ","; b1%; ","; b2%; ","; b3%
+	'PRINT b0%; ","; b1%; ","; b2%; ","; b3%
 	IF bit% = 3 THEN PRINT " "
 
    NEXT
@@ -164,19 +215,19 @@ SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEG
 	position% = 8 + 15 - bit%
 	result(position%) = b3% * 8 + b2% * 4 + b1% * 2 + b0%
 
-	PRINT b0%; ","; b1%; ","; b2%; ","; b3%
+	'PRINT b0%; ","; b1%; ","; b2%; ","; b3%
 	IF bit% = 11 THEN PRINT " "
 
    NEXT
 
    'very last bit (highest-order) : 1 if negative
 
-   PRINT highb0%; ","; highb1%; ","; highb2%; ","; highb3%
+   'PRINT highb0%; ","; highb1%; ","; highb2%; ","; highb3%
 
    result(8) = highb3% * 8 + highb2% * 4 + highb1% * 2 + highb0%
 
 
-   SLEEP
+   'SLEEP
 
 END SUB
 
