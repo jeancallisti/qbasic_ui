@@ -161,58 +161,94 @@ SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
 
   PRINT "Decoding "; w%; " * "; h%; " pixels from GET buffer"
 
-  ' Each word stores 16 pixels
-  wordsPerRowForOneBitPlane% = w% \ 16
+  'rounded like this:
+  ' 0 pixels -> 0
+  '1 to 16 pixels -> 1
+  '17 to 32 pixels -> 2
+  '33 to 48 pixels -> 3
+  '49 to 64 -> 4
+  '65 to 80 -> 5
+  '81 to 96 -> 6
+  '97 to 112-> 7
+  wordsPerRowForOneBitPlane% = (w% + 15) \ 16
+  
+  PRINT "wordsPerRowForOneBitPlane: "; wordsPerRowForOneBitPlane%
 
-  ' One pixel is made of 4 bits though, scattered across 4 words
-  totalWordsPerRow% = wordsPerRowForOneBitPlane% * 4
-
-  FOR row% = 0 TO h% - 1
-     FOR word% = 0 TO wordsPerRowForOneBitPlane% - 1
-
-       baseOffset% = 2 + totalWordsPerRow% * row% + word%
-       w0% = in(baseOffset% + 0 * wordsPerRowForOneBitPlane%)
-       w1% = in(baseOffset% + 1 * wordsPerRowForOneBitPlane%)
-       w2% = in(baseOffset% + 2 * wordsPerRowForOneBitPlane%)
-       w3% = in(baseOffset% + 3 * wordsPerRowForOneBitPlane%)
+  row% = 0
+  totalPixels% = w% * h%
+  currentPixel% = 0
+  currentWord% = 0
 
 
-       'PRINT "4 words to decode : "; w0%; ","; w1%; ","; w2%; ","; w3%
-       'SLEEP
+  DO
+    PRINT "DO : currentPixel "; currentPixel%; ", row "; row%; ", currentWord "; currentWord%
+    
+    w0% = in(2 + currentWord% + 0)
+    w1% = in(2 + currentWord% + 1 * wordsPerRowForOneBitPlane% - 1)
+    w2% = in(2 + currentWord% + 2 * wordsPerRowForOneBitPlane% - 1)
+    w3% = in(2 + currentWord% + 3 * wordsPerRowForOneBitPlane% - 1)
 
-       CALL Decode4words(w0%, w1%, w2%, w3%, SixteenPixels())
+    PRINT "4 words to decode : "; w0%; ","; w1%; ","; w2%; ","; w3%
+    SLEEP
 
-       PRINT "row "; row%; ", word "; word%
-       CALL PrintArray(SixteenPixels(), 16, 0)
-       SLEEP
+    CALL Decode4words(w0%, w1%, w2%, w3%, SixteenPixels())
 
-       firstPixelX% = word% * 16
-       pixelY% = row%
+    PRINT "Decoded as 16 pixels: "
+    CALL PrintArray(SixteenPixels(), 16, 0)
+    SLEEP
 
-       FOR pixel% = 0 TO 15
-	  pixelX% = firstPixelX% + pixel%
+    currentPixelOnRow% = currentPixel% MOD w%
 
-	  'PRINT "firstPixel:"; firstPixel%; ", pixelY:"; pixelY%; ", pixel:"; pixel%; ", pixelX:"; pixelX%
-	  outArray(row% * pixelY% + pixelX%) = SixteenPixels(pixel%)
-       NEXT
+    PRINT "currentPixelOnRow%: "; currentPixelOnRow%
+
+
+    FOR pixel% = 0 TO 15
+       outArray(row% * w% + currentPixelOnRow% + pixel%) = SixteenPixels(pixel%)
+
+    NEXT
+
+
+    PRINT "outArray is now (first 100):"
+    CALL PrintArray(outArray(), 100, 0)
+    SLEEP
+
+    currentWord% = currentWord% + 1
+
+    ' at the end of each row of pixels
+    ' we need to continue working with the same word
+    ' because it contains pixels from this row and the next row.
+    IF currentPixelOnRow% + 16 > w% THEN
+       PRINT "Reached end of row of pixels. Staying on same current word."
+       currentWord% = currentWord% - 1
+       row% = row% + 1
+
+       currentPixel% = currentPixel% + (w% - currentPixelOnRow%)
+    ELSE
+      
+       currentPixel% = currentPixel% + 16
+
        
-       PRINT "outArray is now:"
-       CALL PrintArray(outArray(), 32, 0)
-       SLEEP
+    END IF
 
-       'DEBUG
-       IF (word% > 1 OR row% > 1) THEN SYSTEM
-     NEXT
-  NEXT
+
+    SYSTEM
+
+  LOOP WHILE currentPixel% < totalPixels% - 1
+
+
+
+  ' TODO: Finish with the last unprocessed words
+  ' ...
+
 
 
 END SUB
 
 SUB DRawArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
 
-  FOR i% = 0 TO count - 1
-    colr% = arr(startAt + i%)
-    PSET (i%, 0), colr%
+  FOR I% = 0 TO count - 1
+    colr% = arr(startAt + I%)
+    PSET (I%, 0), colr%
 
   NEXT
 
@@ -220,13 +256,12 @@ SUB DRawArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
 
 END SUB
 
-
 SUB DRawArrayEnlarged (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
 
 
-  FOR i% = 0 TO count - 1
-    colr% = arr(startAt + i%)
-    CALL gfxRectFill(i% * 5, 20, i% * 5 + 4, 20 + 5, colr%)
+  FOR I% = 0 TO count - 1
+    colr% = arr(startAt + I%)
+    CALL gfxRectFill(I% * 5, 20, I% * 5 + 4, 20 + 5, colr%)
 
   NEXT
 
@@ -256,8 +291,8 @@ END SUB
 
 SUB PrintArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
   sResult$ = ""
-  FOR i% = 0 TO count - 1
-    val$ = STR$(arr(startAt + i%))
+  FOR I% = 0 TO count - 1
+    val$ = STR$(arr(startAt + I%))
     sResult$ = sResult$ + val$ + ","
   NEXT
   PRINT sResult$
@@ -337,19 +372,19 @@ FOR attempt% = 0 TO 3
 
   IF attempt% = 0 THEN
     'First sequence: 0 to 15 followed by 15 to 0
-    FOR i% = 0 TO 15
-      sequenceRow0(i%) = i%
-      sequenceRow1(i%) = 15 - i%
+    FOR I% = 0 TO 15
+      sequenceRow0(I%) = I%
+      sequenceRow1(I%) = 15 - I%
     NEXT
-    FOR i% = 0 TO 15
-      sequenceRow0(16 + i%) = 15 - i%
-      sequenceRow1(16 + i%) = i%
+    FOR I% = 0 TO 15
+      sequenceRow0(16 + I%) = 15 - I%
+      sequenceRow1(16 + I%) = I%
     NEXT
   ELSE
     ' Random
-    FOR i% = 0 TO 31
-      sequenceRow0(i%) = RND * 15
-      sequenceRow1(i%) = RND * 15
+    FOR I% = 0 TO 31
+      sequenceRow0(I%) = RND * 15
+      sequenceRow1(I%) = RND * 15
     NEXT
 
   END IF
@@ -405,15 +440,15 @@ FOR attempt% = 0 TO 3
   CALL PrintArray(decodedPixels(), 100, 0)
 
   'Verification of row 0
-  FOR i% = 0 TO 99
-    IF i% > 31 THEN
-       IF decodedPixels(i%) <> 0 THEN
-	   PRINT "Incorrect at "; i%; ", 0"
+  FOR I% = 0 TO 99
+    IF I% > 31 THEN
+       IF decodedPixels(I%) <> 0 THEN
+	   PRINT "Incorrect at "; I%; ", 0"
 	   SYSTEM
        END IF
     ELSE
-       IF sequenceRow0(i%) <> decodedPixels(i%) THEN
-	  PRINT "Incorrect at "; i%; ", 0"
+       IF sequenceRow0(I%) <> decodedPixels(I%) THEN
+	  PRINT "Incorrect at "; I%; ", 0"
 	  SLEEP
 	  SYSTEM
        END IF
@@ -422,15 +457,15 @@ FOR attempt% = 0 TO 3
 
 
   'Verification of row 1
-  FOR i% = 0 TO 99
-    IF i% > 31 THEN
-       IF decodedPixels(100 + i%) <> 0 THEN
-	   PRINT "Incorrect at "; i%; ", 1"
+  FOR I% = 0 TO 99
+    IF I% > 31 THEN
+       IF decodedPixels(100 + I%) <> 0 THEN
+	   PRINT "Incorrect at "; I%; ", 1"
 	   SYSTEM
        END IF
     ELSE
-       IF sequenceRow1(i%) <> decodedPixels(100 + i%) THEN
-	  PRINT "Incorrect at "; i%; ", 1"
+       IF sequenceRow1(I%) <> decodedPixels(100 + I%) THEN
+	  PRINT "Incorrect at "; I%; ", 1"
 	  SLEEP
 	  SYSTEM
        END IF
@@ -452,9 +487,9 @@ SYSTEM
 CALL Decode4words(-1, -1, -1, -1, result())
 
 sResult$ = ""
-FOR i% = 0 TO 15
+FOR I% = 0 TO 15
    'PRINT result(i%)
-   val$ = STR$(result(i%))
+   val$ = STR$(result(I%))
    sResult$ = sResult$ + val$ + ","
 NEXT
 PRINT sResult$
@@ -463,9 +498,9 @@ PRINT sResult$
 CALL Decode4words(-1, -1, -1, -1, result())
 
 sResult$ = ""
-FOR i% = 0 TO 15
+FOR I% = 0 TO 15
    'PRINT result(i%)
-   val$ = STR$(result(i%))
+   val$ = STR$(result(I%))
    sResult$ = sResult$ + val$ + ","
 NEXT
 PRINT sResult$
@@ -487,23 +522,23 @@ v% = 100
 
 'Draw 30x10 tiles of random colors
 DIM generated(31) AS INTEGER
-FOR i% = 0 TO 29
+FOR I% = 0 TO 29
       FOR j% = 0 TO 9
 	  colr% = RND * 15
 
 	  'we save the first pixels for control later
-	  index% = i% * 5
+	  index% = I% * 5
 	  IF index% < 30 THEN generated(index%) = colr%
-	  index% = i% * 5 + 1
+	  index% = I% * 5 + 1
 	  IF index% < 30 THEN generated(index%) = colr%
-	  index% = i% * 5 + 2
+	  index% = I% * 5 + 2
 	  IF index% < 30 THEN generated(index%) = colr%
-	  index% = i% * 5 + 3
+	  index% = I% * 5 + 3
 	  IF index% < 30 THEN generated(index%) = colr%
-	  index% = i% * 5 + 4
+	  index% = I% * 5 + 4
 	  IF index% < 30 THEN generated(index%) = colr%
 
-	  CALL gfxRectFill(u% + i% * 5, v% + j% * 5, u% + i% * 5 + 4, v% + j% * 5 + 4, colr%)
+	  CALL gfxRectFill(u% + I% * 5, v% + j% * 5, u% + I% * 5 + 4, v% + j% * 5 + 4, colr%)
       NEXT
 
 
@@ -559,5 +594,4 @@ SLEEP
 
 
 END SUB
-
 
