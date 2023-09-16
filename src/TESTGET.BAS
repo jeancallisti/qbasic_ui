@@ -1,7 +1,11 @@
+DECLARE SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
+DECLARE SUB DRawArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
+DECLARE SUB DRawArrayEnlarged (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
+DECLARE SUB PrintArray (sequence() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
 DECLARE SUB Test2 ()
 DECLARE SUB Test1b ()
 DECLARE SUB Test1 ()
-DECLARE SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEGER)
+DECLARE SUB Decode4words (w0 AS INTEGER, w1 AS INTEGER, w2 AS INTEGER, w3 AS INTEGER, result() AS INTEGER)
 '============= OS ===============
 
 
@@ -24,13 +28,14 @@ DECLARE SUB gfxRectFill (x1%, y1%, x2%, y2%, colr%)
 '\\\
 '$INCLUDE: 'QBX.BI'
 
+OPTION BASE 0
 
 
 
 '================ GLOBALS: COLORS ==================
 
-DIM SHARED BLACK AS INTEGER
-BLACK = 0
+DIM SHARED black AS INTEGER
+black = 0
 DIM SHARED DARKBLUE AS INTEGER
 DARKBLUE = 1
 DIM SHARED BROWN AS INTEGER
@@ -57,9 +62,9 @@ DIM SHARED result(16) AS INTEGER
 DIM SHARED buffer(1000) AS INTEGER
 
 
-Test1
+'Test1
 Test1b
-Test2
+'Test2
 
 
 
@@ -70,19 +75,11 @@ PRINT "Bye bye"
 
    '========================================================
 
-' Result expected to be an array of 16
-' Buffer expected to have at least 4 INTEGERS starting from startOffset
-SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEGER)
+' Out expected to be an array of 16
+SUB Decode4words (w0 AS INTEGER, w1 AS INTEGER, w2 AS INTEGER, w3 AS INTEGER, outArray() AS INTEGER)
 
 
-   w0% = buffer(startOffset + 0)
-   w1% = buffer(startOffset + 1)
-   w2% = buffer(startOffset + 2)
-   w3% = buffer(startOffset + 3)
-
-
-
-   'PRINT "words = "; w0%; ","; w1%; ","; w2%; ","; w3%
+   'PRINT "words to decode = "; w0%; ","; w1%; ","; w2%; ","; w3%
 
    'SLEEP
 
@@ -113,7 +110,7 @@ SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEG
       
 	'the order is not right
 	position% = 7 - bit%
-	result(position%) = b3% * 8 + b2% * 4 + b1% * 2 + b0%
+	outArray(position%) = b3% * 8 + b2% * 4 + b1% * 2 + b0%
 
 
 	'PRINT b0%; ","; b1%; ","; b2%; ","; b3%
@@ -121,7 +118,7 @@ SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEG
 
    NEXT
 
-   PRINT " "
+   'PRINT " "
 
    FOR bit% = 8 TO 14
 
@@ -134,7 +131,7 @@ SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEG
 
 	'the order is not right
 	position% = 8 + 15 - bit%
-	result(position%) = b3% * 8 + b2% * 4 + b1% * 2 + b0%
+	outArray(position%) = b3% * 8 + b2% * 4 + b1% * 2 + b0%
 
 	'PRINT b0%; ","; b1%; ","; b2%; ","; b3%
 	IF bit% = 11 THEN PRINT " "
@@ -145,10 +142,93 @@ SUB Decode4Words (buffer() AS INTEGER, startOffset AS INTEGER, result() AS INTEG
 
    'PRINT highb0%; ","; highb1%; ","; highb2%; ","; highb3%
 
-   result(8) = highb3% * 8 + highb2% * 4 + highb1% * 2 + highb0%
+   outArray(8) = highb3% * 8 + highb2% * 4 + highb1% * 2 + highb0%
 
 
    'SLEEP
+
+END SUB
+
+' This SUB only works for mode SCREEN 12
+'
+SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
+
+  DIM SixteenPixels(0 TO 15) AS INTEGER
+
+  w% = in(0)
+  h% = in(1)
+
+
+  PRINT "Decoding "; w%; " * "; h%; " pixels from GET buffer"
+
+  ' Each word stores 16 pixels
+  wordsPerRowForOneBitPlane% = w% \ 16
+
+  ' One pixel is made of 4 bits though, scattered across 4 words
+  totalWordsPerRow% = wordsPerRowForOneBitPlane% * 4
+
+  FOR row% = 0 TO h% - 1
+     FOR word% = 0 TO wordsPerRowForOneBitPlane% - 1
+
+       baseOffset% = 2 + totalWordsPerRow% * row% + word%
+       w0% = in(baseOffset% + 0 * wordsPerRowForOneBitPlane%)
+       w1% = in(baseOffset% + 1 * wordsPerRowForOneBitPlane%)
+       w2% = in(baseOffset% + 2 * wordsPerRowForOneBitPlane%)
+       w3% = in(baseOffset% + 3 * wordsPerRowForOneBitPlane%)
+
+
+       'PRINT "4 words to decode : "; w0%; ","; w1%; ","; w2%; ","; w3%
+       'SLEEP
+
+       CALL Decode4words(w0%, w1%, w2%, w3%, SixteenPixels())
+
+       PRINT "row "; row%; ", word "; word%
+       CALL PrintArray(SixteenPixels(), 16, 0)
+       SLEEP
+
+       firstPixelX% = word% * 16
+       pixelY% = row%
+
+       FOR pixel% = 0 TO 15
+	  pixelX% = firstPixelX% + pixel%
+
+	  'PRINT "firstPixel:"; firstPixel%; ", pixelY:"; pixelY%; ", pixel:"; pixel%; ", pixelX:"; pixelX%
+	  outArray(row% * pixelY% + pixelX%) = SixteenPixels(pixel%)
+       NEXT
+       
+       PRINT "outArray is now:"
+       CALL PrintArray(outArray(), 32, 0)
+       SLEEP
+
+       'DEBUG
+       IF (word% > 1 OR row% > 1) THEN SYSTEM
+     NEXT
+  NEXT
+
+
+END SUB
+
+SUB DRawArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
+
+  FOR i% = 0 TO count - 1
+    colr% = arr(startAt + i%)
+    PSET (i%, 0), colr%
+
+  NEXT
+
+
+
+END SUB
+
+
+SUB DRawArrayEnlarged (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
+
+
+  FOR i% = 0 TO count - 1
+    colr% = arr(startAt + i%)
+    CALL gfxRectFill(i% * 5, 20, i% * 5 + 4, 20 + 5, colr%)
+
+  NEXT
 
 END SUB
 
@@ -172,6 +252,16 @@ END SUB
 
 SUB OSLeaveGfx
     SCREEN 10
+END SUB
+
+SUB PrintArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
+  sResult$ = ""
+  FOR i% = 0 TO count - 1
+    val$ = STR$(arr(startAt + i%))
+    sResult$ = sResult$ + val$ + ","
+  NEXT
+  PRINT sResult$
+
 END SUB
 
 SUB Test1
@@ -199,12 +289,20 @@ GET (0, 0)-(15, 0), buffer(0)
 'SLEEP
 
 
-
+DIM buffer1(500)
 
 '=================
 
+' Taking the contiguous words (2,3,4,5)
+' works only because the GET captured 16 pixels wide.
+' If GET captures more pixels then we need to compute
+' the positions of the words we need.
+w0% = buffer1(2 + 0)
+w1% = buffer1(2 + 1)
+w2% = buffer1(2 + 2)
+w3% = buffer1(2 + 3)
 
-CALL Decode4Words(buffer(), 2, result())
+CALL Decode4words(w0%, w1%, w2%, w3%, result())
 
 '=================
 
@@ -224,47 +322,134 @@ SUB Test1b
 ' ARBITRARY SEQUENCE
 
 
-CLS
 
-FOR i% = 0 TO 40
-   IF i% < 10 THEN
-   colr% = 11
-   ELSE
-	IF i% < 20 THEN
-	colr% = 5
-	ELSE
-		IF i% < 30 THEN
-		colr% = 0
-		ELSE
-			IF i% < 40 THEN
-			colr% = 4
-			END IF
-		END IF
-	END IF
-   END IF
+'TODO: compute correct size for buffers
+DIM buffer2(500) AS INTEGER
+
+'sequence of 32*2 pixels (split into two arrays because I'm lazy)
+DIM sequenceRow0(32) AS INTEGER
+DIM sequenceRow1(32) AS INTEGER
+
+'DIM result2(16) AS INTEGER
 
 
-   PSET (i%, 0), colr%
+FOR attempt% = 0 TO 3
+
+  IF attempt% = 0 THEN
+    'First sequence: 0 to 15 followed by 15 to 0
+    FOR i% = 0 TO 15
+      sequenceRow0(i%) = i%
+      sequenceRow1(i%) = 15 - i%
+    NEXT
+    FOR i% = 0 TO 15
+      sequenceRow0(16 + i%) = 15 - i%
+      sequenceRow1(16 + i%) = i%
+    NEXT
+  ELSE
+    ' Random
+    FOR i% = 0 TO 31
+      sequenceRow0(i%) = RND * 15
+      sequenceRow1(i%) = RND * 15
+    NEXT
+
+  END IF
+
+  CLS
+  PRINT ""
+  PRINT ""
+  PRINT ""
+
+  PRINT "Random sequence "; attempt%; " (0 to 3)"
+
+  PRINT ""
+  PRINT "Pixels displayed on screen: "
+  CALL PrintArray(sequenceRow0(), 32, 0)
+  CALL PrintArray(sequenceRow1(), 32, 0)
+
+  'For test: display pixels in small, at top-left of screen
+  CALL DRawArray(sequenceRow0(), 32, 0)
+  CALL DRawArray(sequenceRow1(), 32, 0)
+
+  'For human verification: draw same, but enlarged, anywhere
+  CALL DRawArrayEnlarged(sequenceRow0(), 32, 0)
+  CALL DRawArrayEnlarged(sequenceRow1(), 32, 0)
+
+  'Capture both rows of pixels,
+  'along with some extra non-drawn pixels (i.e. black)on the right
+  getWidth% = 100
+  getHeight% = 2
+  PRINT "Capturing screen: "; getWidth%; "*"; getHeight%; " area"
+  GET (0, 0)-(getWidth% - 1, getHeight% - 1), buffer2(0)
+
+  PRINT ""
+  PRINT "Result of GET (first 100):"
+  CALL PrintArray(buffer2(), 100, 0)
+  PRINT ""
+
+  w% = buffer2(0)
+  h% = buffer2(1)
+  PRINT "Width  : "; w%
+  PRINT "Height : "; h%
+
+  IF w% <> getWidth% OR h% <> getHeight% THEN
+      PRINT "width or height incorrect"
+      SYSTEM
+  END IF
+
+  spriteSizeInPixels% = w% * h%
+  DIM decodedPixels(spriteSizeInPixels%) AS INTEGER
+  CALL DecodeGetPixels(buffer2(), decodedPixels())
+
+
+  PRINT "Decoded (first 100):"
+  CALL PrintArray(decodedPixels(), 100, 0)
+
+  'Verification of row 0
+  FOR i% = 0 TO 99
+    IF i% > 31 THEN
+       IF decodedPixels(i%) <> 0 THEN
+	   PRINT "Incorrect at "; i%; ", 0"
+	   SYSTEM
+       END IF
+    ELSE
+       IF sequenceRow0(i%) <> decodedPixels(i%) THEN
+	  PRINT "Incorrect at "; i%; ", 0"
+	  SLEEP
+	  SYSTEM
+       END IF
+    END IF
+  NEXT
+
+
+  'Verification of row 1
+  FOR i% = 0 TO 99
+    IF i% > 31 THEN
+       IF decodedPixels(100 + i%) <> 0 THEN
+	   PRINT "Incorrect at "; i%; ", 1"
+	   SYSTEM
+       END IF
+    ELSE
+       IF sequenceRow1(i%) <> decodedPixels(100 + i%) THEN
+	  PRINT "Incorrect at "; i%; ", 1"
+	  SLEEP
+	  SYSTEM
+       END IF
+    END IF
+  NEXT
+
+  PRINT "All correct"
+
+  SLEEP
+
 NEXT
 
+SYSTEM
 
-GET (0, 0)-(39, 0), buffer(0)
-
-' picels 0 to 15
-CALL Decode4Words(buffer(), 2, result())
+'== TODO ===
 
 
-sResult$ = ""
-FOR i% = 0 TO 15
-   'PRINT result(i%)
-   val$ = STR$(result(i%))
-   sResult$ = sResult$ + val$ + ","
-NEXT
-PRINT sResult$
-
-
-' pixels 16 to 31
-CALL Decode4Words(buffer(), 6, result())
+'pixels 16 to 31
+CALL Decode4words(-1, -1, -1, -1, result())
 
 sResult$ = ""
 FOR i% = 0 TO 15
@@ -275,7 +460,7 @@ NEXT
 PRINT sResult$
 
 'pixels 32 to 47
-CALL Decode4Words(buffer(), 10, result())
+CALL Decode4words(-1, -1, -1, -1, result())
 
 sResult$ = ""
 FOR i% = 0 TO 15
@@ -350,11 +535,12 @@ PRINT "Sprite size ="; spriteWidth%; "*"; spriteHeight%
 SLEEP
 
 FOR word% = 0 TO wordsCount% - 1
-    CALL Decode4Words(buffer2(), 2, result())
+    '== TODO ==
+    CALL Decode4words(-1, -1, -1, -1, result())
 
 
-PRINT result(0); ","; result(1); ","; result(2); ","; result(3); result(4); ","; result(5); ","; result(6); ",..."
-SLEEP
+    PRINT result(0); ","; result(1); ","; result(2); ","; result(3); result(4); ","; result(5); ","; result(6); ",..."
+    SLEEP
 
     FOR pixel% = 0 TO 15
 	colr% = result(pixel%)
@@ -373,4 +559,5 @@ SLEEP
 
 
 END SUB
+
 
