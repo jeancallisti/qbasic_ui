@@ -222,131 +222,97 @@ SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
 
   PRINT "Decoding "; w%; " * "; h%; " pixels from GET buffer"
 
-  'rounded like this:
-  ' 0 pixels -> 0
-  '1 to 16 pixels -> 1
-  '17 to 32 pixels -> 2
-  '33 to 48 pixels -> 3
-  '49 to 64 -> 4
-  '65 to 80 -> 5
-  '81 to 96 -> 6
-  '97 to 112-> 7
-  'wordsPerRowForOneBitPlane% = (w% + 15) \ 16
-  
-  'PRINT "wordsPerRowForOneBitPlane: "; wordsPerRowForOneBitPlane%
+  IF w% = 0 OR h% = 0 THEN
+     RETURN
+  END IF
 
-  'row% = 0
   totalPixels% = w% * h%
-  'currentPixel% = 0
-  'currentWord% = 0
-
-
   totalWords% = (w% * h% * 4) \ 16 + 1
+
+  IF totalWords% < 1 THEN
+     PRINT "Woops"
+     SYSTEM
+  END IF
+
+  overallWord% = 0
+
+  'decode first word
+  wordValue% = in(2 + overallWord%)
+  CALL Decode1word(wordValue%, sixteenPixels())
+  PRINT "Decoded 16 bits: "
+  CALL PrintArray(sixteenPixels(), 16, 0)
+  
 
   row% = 0
   bitPlane% = 0
-  pixelOnRow% = 0
-  rowShift% = 0
+  bitOnRow% = 0
+  overallPixel% = 0
+  overallBit% = 0
+  totalBits% = w% * h% * 4
+  bitInWord% = 0
 
-  FOR overallWord% = 0 TO totalWords% - 1
-	PRINT ""
-	PRINT "-------------"
-	PRINT ""
+  WHILE overallBit% < totalBits% - 1
 
-
-	word% = in(2 + overallWord%)
-
-	PRINT "overallWord%:"; overallWord%; ", bitPlane%:"; bitPlane%; ", pixelOnRow%:"; pixelOnRow%; ", rowShift%:"; rowShift%
-	PRINT "word to decode : "; word%
-	SLEEP
-
-	CALL Decode1word(word%, sixteenPixels())
+    bitValue% = sixteenPixels(bitInWord%)
+    currentValue% = outArray(overallPixel%)
+    currentValue% = currentValue% + (bitValue% * (2 ^ bitPlane%))
+    outArray(overallPixel%) = currentValue%
 
 
-	PRINT "Decoded as 16 bits: "
-	CALL PrintArray(sixteenPixels(), 16, 0)
-	SLEEP
+    overallBit% = overallBit% + 1
 
 
-	'Keep only the pixels of the current row
-	'i.e. pixels with a valid X
-	startAt% = pixelOnRow% - rowShift%
-	endAt% = startAt% + 15
-	IF startAt% < 0 THEN startAt% = 0
-	IF endAt% >= w% THEN endAt% = w% - 1
+    'advance and/or loop word cursor
+    bitInWord% = bitInWord% + 1
 
-	PRINT "startAt%:"; startAt%; ", endAt%:"; endAt%; "rowShift%:"; rowShift%
-	PRINT ""
-	PRINT "APPLYING TO:"
-	CALL PrintArray(outArray(), endAt% - startAt% + 1, row% * w% + startAt%)
+    IF bitInWord% >= 16 THEN
 
+      bitInWord% = 0
 
-	bit% = (16 - rowShift%) MOD 16
+      overallWord% = overallWord% + 1
 
-	PRINT "APPLYING (bitPlane="; bitPlane%; "): "
-	printStart% = startAt% MOD 16
-	printCount% = endAt% - startAt% + 1
+      wordValue% = in(2 + overallWord%)
+      CALL Decode1word(wordValue%, sixteenPixels())
+      PRINT "Decoded 16 bits: "
+      CALL PrintArray(sixteenPixels(), 16, 0)
 
-	PRINT "PrintArray: "; printStart%; ", "; printCount%
-	CALL PrintArray(sixteenPixels(), printCount%, printStart%)
-
-	
-	FOR pixelX% = startAt% TO endAt%
-
-	  PRINT "bit%:"; bit%
-	  SLEEP
-
-	  position% = row% * w% + pixelX%
-	  currentValue% = outArray(position%)
-	  currentValue% = currentValue% + sixteenPixels(bit%) * 2 ^ bitPlane%
-	  outArray(position%) = currentValue%
-
-	  bit% = bit% + 1   '0 to 15 but clipped by rowShift
-	NEXT
+    END IF
 
 
-	PRINT "Updated:"
-	CALL PrintArray(outArray(), 16, row% * w% + startAt%)
-	
-	PRINT "outArray is now (first 50)"
-	CALL PrintArray(outArray(), 50, 0)
-
-	IF rowShift% > 0 THEN SYSTEM
-
-	pixelOnRow% = pixelOnRow% + 16
-
-	PRINT "COMPARE "; pixelOnRow%; ","; w%
-	IF pixelOnRow% >= w% THEN
-
-	  PRINT "Next row."
-
-	  
-	  rowShift% = 16 - (pixelOnRow% MOD w%)
-
-	  pixelOnRow% = 0
-	  bitPlane% = bitPlane% + 1
-
-	  'Force statying on the same word
-	  overallWord% = overallWord% - 1
-	END IF
+    'advance and/or loop pixels row cursor
+    bitOnRow% = bitOnRow% + 1
+    overallPixel% = overallPixel% + 1
+    IF bitOnRow% = w% THEN
 
 
-	IF bitPlane% >= 4 THEN
+       PRINT "end of bits row."
+       
+       bitOnRow% = 0
 
-	  PRINT "Next bitplane"
-	  bitPlane% = 0
-	  row% = row% + 1
-	END IF
+       overallPixel% = overallPixel% - w%
+
+       PRINT "overallPixel is now "; overallPixel%
+       SLEEP
+
+       bitPlane% = bitPlane% + 1
+       IF bitPlane% = 4 THEN
+
+	 PRINT "End of bit plane."
+
+	 bitPlane% = 0
+	 row% = row% + 1
+	 overallPixel% = overallPixel% + w%
+       END IF
+
+    END IF
 
 
-	'DEBUG safety
-	'IF pixelOnRow% > 16 THEN SYSTEM
-	'IF bitPlane% > 1 THEN SYSTEM
-	IF row% > 1 THEN SYSTEM
 
-  NEXT
+  WEND
 
 
+  PRINT "Decoding finished."
+  SLEEP
 
 END SUB
 
@@ -495,6 +461,12 @@ FOR attempt% = 0 TO 3
 
   END IF
 
+  '3 extra pixels that are easy to spot in the data
+  PSET (32, 0), 15
+  PSET (33, 0), 15
+  PSET (34, 0), 15
+
+
   CLS
   PRINT ""
   PRINT ""
@@ -542,8 +514,8 @@ FOR attempt% = 0 TO 3
   CALL DecodeGetPixels(buffer2(), decodedPixels())
 
 
-  PRINT "Decoded (first 100):"
-  CALL PrintArray(decodedPixels(), 100, 0)
+  PRINT "Decoded (first N):"
+  CALL PrintArray(decodedPixels(), getWidth% * getHeight%, 0)
 
   'Verification of row 0
   FOR i% = 0 TO 99
