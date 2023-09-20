@@ -1,3 +1,4 @@
+DECLARE SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
 DECLARE SUB Decode1word (w AS INTEGER, outArray() AS INTEGER)
 DECLARE SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
 DECLARE SUB DRawArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
@@ -136,6 +137,48 @@ SUB Decode1word (w AS INTEGER, outArray() AS INTEGER)
 
 END SUB
 
+
+
+
+SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
+
+
+   'we get the highest order bit first before we blast it
+   '(negative 16-bit integer means highest bit == 1)
+   highb% = -(w% < 0)
+
+
+   outArray(0) = highb%
+
+   'zeroify the highest order bit, to work only with positive integers
+   w% = w% AND 32767
+
+
+   SLEEP
+
+   FOR bit% = 15 TO 1 STEP -1
+
+
+     PRINT "bit:"; bit%; "  word:"; w%
+
+     b% = w% AND 1
+
+     w% = w% \ 2
+
+     outArray(bit%) = b%
+
+     PRINT "result: "; b%
+     SLEEP
+
+   NEXT
+
+
+
+   PRINT "bit:"; 0; "  word:"; w%
+   PRINT "result: "; highb%
+
+END SUB
+
 ' Out expected to be an array of 16
 SUB Decode4words (w0 AS INTEGER, w1 AS INTEGER, w2 AS INTEGER, w3 AS INTEGER, outArray() AS INTEGER)
 
@@ -238,7 +281,7 @@ SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
 
   'decode first word
   wordValue% = in(2 + overallWord%)
-  CALL Decode1word(wordValue%, sixteenPixels())
+  CALL Decode1wordv2(wordValue%, sixteenPixels())
   PRINT "Decoded 16 bits: "
   CALL PrintArray(sixteenPixels(), 16, 0)
   
@@ -254,6 +297,9 @@ SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
   WHILE overallBit% < totalBits% - 1
 
     bitValue% = sixteenPixels(bitInWord%)
+
+    PRINT "row "; row%; "plane "; bitPlane%; "bit "; (overallBit% MOD w%); ":"; bitValue%
+
     currentValue% = outArray(overallPixel%)
     currentValue% = currentValue% + (bitValue% * (2 ^ bitPlane%))
     outArray(overallPixel%) = currentValue%
@@ -272,7 +318,7 @@ SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
       overallWord% = overallWord% + 1
 
       wordValue% = in(2 + overallWord%)
-      CALL Decode1word(wordValue%, sixteenPixels())
+      CALL Decode1wordv2(wordValue%, sixteenPixels())
       PRINT "Decoded 16 bits: "
       CALL PrintArray(sixteenPixels(), 16, 0)
 
@@ -285,23 +331,27 @@ SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
     IF bitOnRow% = w% THEN
 
 
-       PRINT "end of bits row."
+       PRINT "end of bits row (bitPlane "; bitPlane%; ")"
        
        bitOnRow% = 0
 
        overallPixel% = overallPixel% - w%
 
-       PRINT "overallPixel is now "; overallPixel%
+       PRINT "overallPixel has been reverted back to "; overallPixel%
        SLEEP
 
        bitPlane% = bitPlane% + 1
        IF bitPlane% = 4 THEN
 
-	 PRINT "End of bit plane."
+	 PRINT "End of bit plane. Next row of pixels."
 
 	 bitPlane% = 0
 	 row% = row% + 1
 	 overallPixel% = overallPixel% + w%
+
+	 PRINT "overallPixel has been increased to "; overallPixel%
+	 SLEEP
+
        END IF
 
     END IF
@@ -441,8 +491,15 @@ DIM sequenceRow1(32) AS INTEGER
 
 
 FOR attempt% = 0 TO 3
+  IF atttempt% = 0 THEN
 
-  IF attempt% = 0 THEN
+    FOR i% = 0 TO 8
+      sequenceRow0(i%) = 0
+      sequenceRow1(i%) = 15
+    NEXT
+
+  ELSE
+  IF attempt% = 1 THEN
     'First sequence: 0 to 15 followed by 15 to 0
     FOR i% = 0 TO 15
       sequenceRow0(i%) = i%
@@ -460,6 +517,8 @@ FOR attempt% = 0 TO 3
     NEXT
 
   END IF
+  END IF
+
 
   '3 extra pixels that are easy to spot in the data
   PSET (32, 0), 15
@@ -489,7 +548,7 @@ FOR attempt% = 0 TO 3
 
   'Capture both rows of pixels,
   'along with some extra non-drawn pixels (i.e. black)on the right
-  getWidth% = 35
+  getWidth% = 9
   getHeight% = 2
   PRINT "Capturing screen: "; getWidth%; "*"; getHeight%; " area"
   GET (0, 0)-(getWidth% - 1, getHeight% - 1), buffer2(0)
