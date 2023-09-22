@@ -1,3 +1,5 @@
+DECLARE SUB Test4 ()
+DECLARE SUB Test3 ()
 DECLARE SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
 DECLARE SUB Decode1word (w AS INTEGER, outArray() AS INTEGER)
 DECLARE SUB DecodeGetPixels (in() AS INTEGER, outArray() AS INTEGER)
@@ -66,9 +68,10 @@ DIM SHARED buffer(1000) AS INTEGER
 
 
 'Test1
-Test1b
+'Test1b
 'Test2
-
+'Test3
+Test4
 
 
 
@@ -136,9 +139,6 @@ SUB Decode1word (w AS INTEGER, outArray() AS INTEGER)
    'SLEEP
 
 END SUB
-
-
-
 
 SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
 
@@ -729,6 +729,243 @@ NEXT
 
 SLEEP
 
+
+END SUB
+
+
+SUB Test3
+
+PRINT ""
+PRINT ""
+
+DIM buffer4(100) AS INTEGER
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer4(i%) = 0
+NEXT
+
+FOR i% = 0 TO 7
+   PSET (i%, 0), 15
+NEXT
+
+PRINT "0"
+PRINT ""
+
+
+GET (0, 0)-(7, 0), buffer4(0)
+
+CALL PrintArray(buffer4(), 8, 0)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
+
+'===========================
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer4(i%) = 0
+NEXT
+
+
+FOR i% = 0 TO 5
+   PSET (i%, 0), 15
+NEXT
+
+PRINT "1"
+PRINT ""
+
+
+GET (0, 0)-(7, 0), buffer4(0)
+
+CALL PrintArray(buffer4(), 8, 0)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
+
+'===========================
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer4(i%) = 0
+NEXT
+
+
+FOR i% = 0 TO 9
+   PSET (i%, 0), 15
+NEXT
+
+PRINT "2"
+PRINT ""
+
+
+GET (0, 0)-(7, 0), buffer4(0)
+
+CALL PrintArray(buffer4(), 8, 0)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
+
+
+'===========================
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer4(i%) = 0
+NEXT
+
+
+
+FOR i% = 0 TO 7
+   PSET (i%, 0), 15
+NEXT
+
+PRINT "3"
+PRINT ""
+
+
+GET (0, 0)-(7, 1), buffer4(0)
+
+CALL PrintArray(buffer4(), 8, 0)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
+
+
+
+
+'===========================
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer4(i%) = 0
+NEXT
+
+
+FOR i% = 0 TO 9
+   PSET (i%, 0), 15
+NEXT
+
+PRINT "4"
+PRINT ""
+
+
+GET (0, 0)-(7, 1), buffer4(0)
+
+CALL PrintArray(buffer4(), 8, 0)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
+
+
+'===========================
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer4(i%) = 0
+NEXT
+
+
+FOR i% = 0 TO 5
+   PSET (i%, 0), 15
+NEXT
+
+PRINT "5"
+PRINT ""
+
+
+GET (0, 0)-(7, 1), buffer4(0)
+
+CALL PrintArray(buffer4(), 8, 0)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
+END SUB
+
+
+
+SUB Test4
+
+CLS
+
+PRINT ""
+PRINT ""
+PRINT ""
+
+DIM buffer5(100) AS INTEGER
+
+PSET (0, 0), 15
+GET (0, 0)-(0, 0), buffer5(0)
+
+CALL PrintArray(buffer5(), 100, 0)
+
+SLEEP
 
 END SUB
 
