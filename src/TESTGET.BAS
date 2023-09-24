@@ -1,3 +1,7 @@
+DECLARE FUNCTION Compare1Word% (w1() AS INTEGER, w2() AS INTEGER)
+DECLARE SUB Decode1wordUnitTests ()
+DECLARE SUB set1word (array() AS INTEGER, b0%, b1%, b2%, b3%, b4%, b5%, b6%, b7%, b8%, b9%, b10%, b11%, b12%, b13%, b14%, b15%)
+DECLARE SUB Test6 ()
 DECLARE SUB Test4 ()
 DECLARE SUB Test3 ()
 DECLARE SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
@@ -63,16 +67,19 @@ DARKGRAY = 8
 OSEnterGfx
 
 
+
+CALL Decode1wordUnitTests
+
 DIM SHARED result(16) AS INTEGER
 DIM SHARED buffer(1000) AS INTEGER
 
 
 'Test1
-'Test1b
+Test1b
 'Test2
 'Test3
-Test4
-
+'Test4
+'Test6
 
 
 OSLeaveGfx
@@ -80,6 +87,23 @@ PRINT "Bye bye"
 
 
    '========================================================
+
+' Returns 0 if identical , 1 if different
+FUNCTION Compare1Word% (w1() AS INTEGER, w2() AS INTEGER)
+
+FOR i% = 0 TO 15
+
+  IF (w1(i%) <> w2(i%)) THEN
+     Compare1Word% = 1
+  END IF
+
+  Compare1Word% = 0
+
+
+NEXT
+
+END FUNCTION
+
 
 SUB Decode1word (w AS INTEGER, outArray() AS INTEGER)
    'PRINT "word to decode = "; w%;
@@ -140,6 +164,241 @@ SUB Decode1word (w AS INTEGER, outArray() AS INTEGER)
 
 END SUB
 
+' This SUB decodes several 16-bits signed integers (Qbasic's INTEGER) type
+' and checks that the binary result is correct
+SUB Decode1wordUnitTests
+
+   DIM expected(16) AS INTEGER
+
+   DIM decoded(16) AS INTEGER
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = 0
+
+   CALL set1word(expected(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = 1
+
+   CALL set1word(expected(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = 3
+
+   CALL set1word(expected(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = 7
+
+   CALL set1word(expected(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = 255
+
+   CALL set1word(expected(), 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = 254
+
+   CALL set1word(expected(), 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = 256
+
+   CALL set1word(expected(), 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = -1
+
+   CALL set1word(expected(), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+
+   '===================
+
+
+   'Reset
+   FOR i% = 0 TO 15
+     expected(i%) = 0
+   NEXT
+   FOR i% = 0 TO 15
+     decoded(i%) = 0
+   NEXT
+
+
+   w% = -32768
+
+   CALL set1word(expected(), 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+   CALL Decode1wordv2(w%, decoded())
+
+   IF (Compare1Word(expected(), decoded()) <> 0) THEN
+      PRINT "binary decoding test failed"
+      SLEEP
+      SYSTEM
+   END IF
+
+   '=====================
+
+
+   PRINT "Unit tests OK"
+   'SLEEP
+   'SYSTEM
+END SUB
+
+
 SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
 
 
@@ -154,12 +413,12 @@ SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
    w% = w% AND 32767
 
 
-   SLEEP
+   'SLEEP
 
    FOR bit% = 15 TO 1 STEP -1
 
 
-     PRINT "bit:"; bit%; "  word:"; w%
+     'PRINT "bit:"; bit%; "  word:"; w%
 
      b% = w% AND 1
 
@@ -167,17 +426,18 @@ SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
 
      outArray(bit%) = b%
 
-     PRINT "result: "; b%
-     SLEEP
+     'PRINT "result: "; b%
+     'SLEEP
 
    NEXT
 
 
 
-   PRINT "bit:"; 0; "  word:"; w%
-   PRINT "result: "; highb%
+   'PRINT "bit:"; 0; "  word:"; w%
+   'PRINT "result: "; highb%
 
 END SUB
+
 
 ' Out expected to be an array of 16
 SUB Decode4words (w0 AS INTEGER, w1 AS INTEGER, w2 AS INTEGER, w3 AS INTEGER, outArray() AS INTEGER)
@@ -418,6 +678,28 @@ SUB PrintArray (arr() AS INTEGER, count AS INTEGER, startAt AS INTEGER)
     sResult$ = sResult$ + val$ + ","
   NEXT
   PRINT sResult$
+
+END SUB
+
+SUB set1word (array() AS INTEGER, b0%, b1%, b2%, b3%, b4%, b5%, b6%, b7%, b8%, b9%, b10%, b11%, b12%, b13%, b14%, b15%)
+
+
+   array(0) = b0%
+   array(1) = b1%
+   array(2) = b2%
+   array(3) = b3%
+   array(4) = b4%
+   array(5) = b5%
+   array(6) = b6%
+   array(7) = b7%
+   array(8) = b8%
+   array(9) = b9%
+   array(10) = b10%
+   array(11) = b11%
+   array(12) = b12%
+   array(13) = b13%
+   array(14) = b14%
+   array(15) = b15%
 
 END SUB
 
@@ -732,7 +1014,6 @@ SLEEP
 
 END SUB
 
-
 SUB Test3
 
 PRINT ""
@@ -948,8 +1229,6 @@ PRINT ""
 
 END SUB
 
-
-
 SUB Test4
 
 CLS
@@ -966,6 +1245,83 @@ GET (0, 0)-(0, 0), buffer5(0)
 CALL PrintArray(buffer5(), 100, 0)
 
 SLEEP
+
+END SUB
+
+SUB Test6
+
+PRINT ""
+PRINT ""
+
+DIM buffer6(100) AS INTEGER
+
+
+
+'===========================
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer6(i%) = 0
+NEXT
+
+PSET (0, 0), 3
+
+
+
+
+PRINT "0"
+PRINT ""
+
+
+GET (0, 0)-(1, 0), buffer6(0)
+
+CALL PrintArray(buffer6(), 97, 2)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
+
+'===========================
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, 0), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer6(i%) = 0
+NEXT
+
+
+PSET (0, 0), 15
+
+
+PRINT "1"
+PRINT ""
+
+
+GET (0, 0)-(0, 1), buffer6(0)
+
+CALL PrintArray(buffer6(), 30, 2)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
 
 END SUB
 
