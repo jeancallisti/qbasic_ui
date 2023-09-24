@@ -68,18 +68,18 @@ OSEnterGfx
 
 
 
-CALL Decode1wordUnitTests
+'CALL Decode1wordUnitTests
 
 DIM SHARED result(16) AS INTEGER
 DIM SHARED buffer(1000) AS INTEGER
 
 
 'Test1
-Test1b
+'Test1b
 'Test2
 'Test3
 'Test4
-'Test6
+Test6
 
 
 OSLeaveGfx
@@ -103,7 +103,6 @@ FOR i% = 0 TO 15
 NEXT
 
 END FUNCTION
-
 
 SUB Decode1word (w AS INTEGER, outArray() AS INTEGER)
    'PRINT "word to decode = "; w%;
@@ -398,7 +397,6 @@ SUB Decode1wordUnitTests
    'SYSTEM
 END SUB
 
-
 SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
 
 
@@ -437,7 +435,6 @@ SUB Decode1wordv2 (w AS INTEGER, outArray() AS INTEGER)
    'PRINT "result: "; highb%
 
 END SUB
-
 
 ' Out expected to be an array of 16
 SUB Decode4words (w0 AS INTEGER, w1 AS INTEGER, w2 AS INTEGER, w3 AS INTEGER, outArray() AS INTEGER)
@@ -1025,7 +1022,7 @@ DIM buffer4(100) AS INTEGER
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1058,7 +1055,7 @@ PRINT ""
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1092,7 +1089,7 @@ PRINT ""
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1127,7 +1124,7 @@ PRINT ""
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1165,7 +1162,7 @@ PRINT ""
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1200,7 +1197,7 @@ PRINT ""
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1262,7 +1259,7 @@ DIM buffer6(100) AS INTEGER
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1271,7 +1268,8 @@ FOR i% = 0 TO 99
   buffer6(i%) = 0
 NEXT
 
-PSET (0, 0), 3
+PSET (0, 0), 15
+PSET (0, 1), 15
 
 
 
@@ -1280,7 +1278,7 @@ PRINT "0"
 PRINT ""
 
 
-GET (0, 0)-(1, 0), buffer6(0)
+GET (0, 0)-(0, 1), buffer6(0)
 
 CALL PrintArray(buffer6(), 97, 2)
 
@@ -1296,7 +1294,7 @@ PRINT ""
 'Reset
 FOR j% = 0 TO 5
   FOR i% = 0 TO 100
-   PSET (i%, 0), 0
+   PSET (i%, j%), 0
   NEXT
 NEXT
 
@@ -1321,6 +1319,44 @@ SLEEP
 
 PRINT ""
 PRINT ""
+
+
+'===========================
+
+
+'Reset
+FOR j% = 0 TO 5
+  FOR i% = 0 TO 100
+   PSET (i%, j%), 0
+  NEXT
+NEXT
+
+'Reset
+FOR i% = 0 TO 99
+  buffer6(i%) = 0
+NEXT
+
+
+FOR i% = 0 TO 9
+  PSET (i%, 0), 15
+  PSET (i%, 1), 15
+NEXT
+
+
+PRINT "2"
+PRINT ""
+
+	
+
+GET (0, 0)-(9, 1), buffer6(0)
+
+CALL PrintArray(buffer6(), 30, 2)
+
+SLEEP
+
+PRINT ""
+PRINT ""
+
 
 
 END SUB
